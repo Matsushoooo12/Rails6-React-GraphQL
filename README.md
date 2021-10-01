@@ -224,3 +224,142 @@ Get a post
 ```
 
 <img width="839" alt="スクリーンショット 2021-10-01 10 54 11" src="https://user-images.githubusercontent.com/66903388/135553584-34cb9adc-5a94-4889-8a3c-c0f0bd842579.png">
+
+## React プロジェクト作成
+
+Rails プロジェクトのルートディレクトリで React プロジェクトを作成します。作成には create-react-app を使用します。
+
+```
+$ npx create-react-app プロジェクト名
+```
+
+## cors の設定
+
+CORS とは CRUD リクエストをサーバーがフィルターするものです。
+
+### Gemfile 設定
+
+Rails の Gemfile でコメントアウトされているので外して bundle install しましょう。
+
+Gemfile
+
+```
+gem 'rack-cors'
+```
+
+```
+$ bundle install
+```
+
+### cors.rb
+
+config/initializers/cors.rb のコメントアウトされている部分を外して origins を\*と指定しましょう。
+
+config/initializers/cors.rb
+
+```
+Rails.application.config.middleware.insert_before 0, Rack::Cors do
+  allow do
+    origins '*'
+
+    resource '*',
+      headers: :any,
+      methods: [:get, :post, :put, :patch, :delete, :options, :head]
+  end
+end
+```
+
+## 必要な npm パッケージをインストール
+
+Apollo パッケージは、GraphQL を使ったクライアントアプリやサーバーを作成するためのライブラリ群です。 クライアントアプリを作るためのライブラリは、Apollo Client として @apollo/client という NPM パッケージにまとめられています。
+
+Web アプリのコンポーネントを作成するときは React がよく使われますが、Apollo は GraphQL を扱いやすくする React コンポーネント（ApolloProvider、Query、Mutation、Subscription）や React Hook 拡張（useQuery) などを提供しています。
+
+```
+$ npm i @apollo/client @apollo/react-hooks apollo-boost graphql graphql-tag
+```
+
+- @apollo/client
+
+GraphQL 標準パッケージ
+
+- @apollo/react-hooks
+
+GraphQL を扱いやすくする React コンポーネント（ApolloProvider、Query、Mutation、Subscription）や React Hook 拡張（useQuery) など
+
+- apollo-boost
+
+ApolloClient コンストラクタを使えば OK です (import {ApolloClient} from '@apollo/client/core')
+
+- graphql
+
+GraphQL 標準パッケージ
+
+- graphql-tag
+
+GraphQL をパースするための gql も @apollo/client に統合されています (import {gql} from '@apollo/client')
+
+## Get all posts 表示
+
+src/App.js
+
+```
+import React from 'react'
+import ApolloClient from 'apollo-boost'
+import { ApolloProvider } from '@apollo/react-hooks'
+import Demo from './Demo';
+const client = new ApolloClient({
+  uri: 'http://localhost:3000/graphql'
+})
+
+function App() {
+  return (
+    <ApolloProvider client={client}>
+      <div>
+        <Demo />
+      </div>
+    </ApolloProvider>
+  );
+}
+
+export default App;
+```
+
+src/Demo.js
+
+```
+import React from 'react'
+import { useQuery } from '@apollo/react-hooks'
+import gql from 'graphql-tag'
+
+const GET_USERS = gql`
+    {
+        posts{
+            id
+            title
+        }
+    }
+`
+
+const Demo = () => {
+    const { loading, error, data } = useQuery(GET_USERS);
+
+    if(loading) return 'ロード中...'
+    if(error) return `Error ${error.message}`
+    return (
+        <React.Fragment>
+            {data.posts.map(post => (
+                <div key={post.id}>
+                    <h1>{post.title}</h1>
+                </div>
+            ))}
+        </React.Fragment>
+    )
+}
+
+export default Demo
+```
+
+以下のように表示されたら成功です。
+
+<img width="839" alt="スクリーンショット 2021-10-01 11 31 53" src="https://user-images.githubusercontent.com/66903388/135556552-a4afb3a8-bf67-4a06-8b0e-519419c6fef4.png">
