@@ -363,3 +363,79 @@ export default Demo
 以下のように表示されたら成功です。
 
 <img width="839" alt="スクリーンショット 2021-10-01 11 31 53" src="https://user-images.githubusercontent.com/66903388/135556552-a4afb3a8-bf67-4a06-8b0e-519419c6fef4.png">
+
+## Mutaion Create の作成
+
+Post を作成する為に使用される mutation を作成する為に以下のコマンドを流します。
+
+```
+$ rails g graphql:mutation CreatePost
+```
+
+上記のコマンドは以下の 2 つの事を行います。
+
+- graphql/mutations/create_post.rb の作成。
+- field :createPost, mutation: Mutations::CreatePost を graphql/types/mutations_type.rb に追記する。
+
+app/graphql/mutations/create_post.rb
+
+```
+module Mutations
+  class CreatePost < BaseMutation
+    # TODO: define return fields
+    # field :post, Types::PostType, null: false
+
+    # TODO: define arguments
+    # argument :name, String, required: true
+
+    # TODO: define resolve method
+    # def resolve(name:)
+    #   { post: ... }
+    # end
+  end
+end
+```
+
+app/graphql/types/mutation_type.rb
+
+```
+module Types
+  class MutationType < Types::BaseObject
+    # Mutation Create
+    field :create_post, mutation: Mutations::CreatePost
+    # TODO: remove me
+    field :test_field, String, null: false,
+      description: "An example field added by the generator"
+    def test_field
+      "Hello World"
+    end
+  end
+end
+```
+
+## Mutation の createPost の記述
+
+field や argument を定義して、Post の作成が行えるよう、以下のように編集していきます。
+
+app/graphql/mutations/create_post.rb
+
+```
+module Mutations
+  class CreatePost < BaseMutation
+    graphql_name 'CreatePost'
+    field :post, Types::PostType, null: false
+    argument :title, String, required: false
+
+    def resolve(**args)
+      post = Post.create(title: args[:title])
+      {
+        post: post,
+      }
+    end
+  end
+end
+```
+
+`$ rails s`で GraphQL で確認して以下のように表示されたら成功です。
+
+<img width="839" alt="スクリーンショット 2021-10-01 12 04 08" src="https://user-images.githubusercontent.com/66903388/135559105-6394908f-34d6-4fb6-bd39-c8794b12dc11.png">
