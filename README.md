@@ -439,3 +439,78 @@ end
 `$ rails s`で GraphQL で確認して以下のように表示されたら成功です。
 
 <img width="839" alt="スクリーンショット 2021-10-01 12 04 08" src="https://user-images.githubusercontent.com/66903388/135559105-6394908f-34d6-4fb6-bd39-c8794b12dc11.png">
+
+## Mutation Update の作成
+
+```
+$ rails g graphql:mutation UpdatePost
+```
+
+自動作成された /graphql/mutations/update_post.rb を以下のように変更しましょう。
+
+/graphql/mutations/create_post.rb と非常に似ており、違いは argument にて id を指定する箇所くらいです。
+
+app/graphql/mutations/update_post.rb
+
+```
+module Mutations
+  class UpdatePost < BaseMutation
+    graphql_name 'UpdatePost'
+
+    field :post, Types::PostType, null: false
+
+    argument :id, ID, required: true
+    argument :title, String, required: false
+
+    def resolve(**args)
+      post = Post.find(args[:id])
+      post.update(title: args[:title])
+      {
+        post: post
+      }
+    end
+  end
+end
+```
+
+以下のように表示されたら成功です。
+
+<img width="839" alt="スクリーンショット 2021-10-01 15 47 17" src="https://user-images.githubusercontent.com/66903388/135577396-7c527abe-2476-4562-884e-c3e784243d0a.png">
+
+一覧を表示して変わっていると思います。
+
+## Mutation Delete 　の作成
+
+```
+$ rails g graphql:mutation DeletePost
+```
+
+今回は削除の為に指定する id のみを argument にセットします。
+
+app/graphql/mutations/delete_post.rb
+
+```
+module Mutations
+  class DeletePost < BaseMutation
+    graphql_name 'DeletePost'
+
+    field :post, Types::PostType, null: false
+
+    argument :id, ID, required: true
+
+    def resolve(**args)
+      post = Post.find(args[:id])
+      post.destroy
+      {
+        post: post
+      }
+    end
+  end
+end
+```
+
+以下のように表示されていたら成功です。
+
+<img width="839" alt="スクリーンショット 2021-10-01 15 52 40" src="https://user-images.githubusercontent.com/66903388/135578025-f37fd0a7-6d9b-4b78-8327-549bb887c2e8.png">
+
+一覧を表示すると指定した ID のデータが消えていると思います。
